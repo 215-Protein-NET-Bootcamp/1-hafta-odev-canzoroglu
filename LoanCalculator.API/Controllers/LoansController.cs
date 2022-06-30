@@ -23,12 +23,12 @@ namespace LoanCalculator.API.Controllers
 
         // Toplam ödenecek ücret ve faiz miktarı bilgisini içeren yanıtı döndürür 
         [HttpGet]
-        public CommonResponse<LoanPayment> Get([FromQuery] uint loanAmount, byte loanTermYear)
+        public IActionResult Get([FromQuery] uint loanAmount, byte loanTermYear)
         {
             if (loanAmount < 1000 || loanTermYear == 0)
             {
-                var res = new CommonResponse<LoanPayment>("Loan amount must be greater than 999 and term must be greater than 0");
-                return res;
+                var errRes = new CommonResponse<LoanPayment>("Loan amount must be greater than 999 and term must be greater than 0");
+                return BadRequest(errRes);
             }
             
             uint totalNumberOfPayments = loanTermYear * JsonSerializer.Deserialize<uint>(Configuration["MonthsPerYear"]);
@@ -38,18 +38,19 @@ namespace LoanCalculator.API.Controllers
             double totalPayment = Math.Round((totalNumberOfPayments * montlyPayments), 2);
             double interestPayment = Math.Round((totalPayment - loanAmount), 2);
             
-            return new CommonResponse<LoanPayment>(new LoanPayment{TotalPayment = totalPayment, InterestPayment = interestPayment});
+            var res = new CommonResponse<LoanPayment>(new LoanPayment{TotalPayment = totalPayment, InterestPayment = interestPayment});
+            return Ok(res);
         }
 
         // Aylık detaylı ödeme planını içeren yanıtı döndürür
         [HttpGet]
         [Route("GetPaymentPlan")]
-        public CommonResponse<List<MonthlyPayment>> GetPaymentPlan([FromQuery] uint loanAmount, byte loanTermYear)
+        public IActionResult GetPaymentPlan([FromQuery] uint loanAmount, byte loanTermYear)
         {
             if (loanAmount < 1000 || loanTermYear == 0)
             {
-                var res = new CommonResponse<List<MonthlyPayment>>("Loan amount must be greater than 999 and term must be greater than 0");
-                return res;
+                var errRes = new CommonResponse<List<MonthlyPayment>>("Loan amount must be greater than 999 and term must be greater than 0");
+                return BadRequest(errRes);
             }
             
             uint totalNumberOfPayments = loanTermYear * JsonSerializer.Deserialize<uint>(Configuration["MonthsPerYear"]);
@@ -69,7 +70,7 @@ namespace LoanCalculator.API.Controllers
                 payments.Add(payment);
             }
             
-            return new CommonResponse<List<MonthlyPayment>>(payments);
+            return Ok(new CommonResponse<List<MonthlyPayment>>(payments));
         }
 
         private double calculateMontlyPayment(uint loanAmount, float interestRate, uint totalNumberOfPayments)
