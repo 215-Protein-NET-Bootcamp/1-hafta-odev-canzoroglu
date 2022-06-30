@@ -1,5 +1,3 @@
-using System;
-
 namespace LoanCalculator.API.Models
 {
     public class MonthlyPayment
